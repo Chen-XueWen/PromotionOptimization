@@ -1,0 +1,318 @@
+---
+title: 'Promotion Optimization: R Markdown Supplement'
+output:
+  word_document: default
+  html_document:
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+  pdf_document: default
+---
+
+<div id="instructions">
+This is a R markdown worksheet to supplement the BDC6111 project report, which goes in depth how the data is processed and how the constraints are formed. 
+</div>
+
+This report is written by Tan Xue Wen & He Yifan.
+
+## Introduction
+The data source came from UCI Machine learning Repository:
+
+Actual Repo: https://archive.ics.uci.edu/ml/datasets/online+retail
+
+Kaggle: https://www.kaggle.com/carrie1/ecommerce-data
+
+The data contains all the transactions for a UK-based and registered non-store online retail. The company mainly sells unique all-occasion gifts. Their customers are mostly wholesalers.
+
+## Motivation
+We first have to understand the data well in order to know what are the constraints. In order to do that, this markdown sheet will explore the data with analytical methods. The flow of this supplement sheet will be as such:
+
+* Importing the Data
+* Cleaning & Understanding Data
+* Discover relationship between variables
+* Coming up constraints with the above discoveries
+
+There will be cases where we have to simplify the data in order to establish relationships.
+
+
+## Step One: Importing Libraries
+
+```{r,warning=FALSE,message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(statsr)
+library(tidyr)
+library (vctrs)
+library(readr)
+library(gridExtra)
+library(Hmisc)
+```
+
+
+## Step Two: Importing Ecommerce Data
+```{r,warning=FALSE,message=FALSE}
+ecommerce <- read_csv("data.csv")
+```
+
+## Step Three: Cleaning & Understanding Data
+#### Check data dimension and the variables:
+```{r}
+dim(ecommerce)
+names(ecommerce)
+summary(ecommerce)
+```
+
+
+* * *
+### a. Removing NAs:
+Most datasets are usually incomplete and some rows may come with NA. NA rows are may cause some obstacle when we are doing analysis hence we will be removing all row with NAs:
+```{r}
+ecommerce <- na.omit(ecommerce)
+dim(ecommerce)
+
+
+```
+
+We can see that the cleaned data set has been reduced to 406829 observations.
+
+
+* * *
+### b. Most / Least Transacted Products:
+Next, we will check what kind of products are offered by the online retail and also the frequency of each product appearing in the data. Below shows the top 10 most transacted and least transacted product:
+
+```{r}
+ecommerce %>% group_by(Description) %>% summarise(Transactions = n()) %>% arrange(desc(Transactions))
+
+ecommerce %>% group_by(Description) %>% summarise(Transactions = n()) %>% arrange(Transactions)
+```
+
+Products that have less than 10 transactions might not have sufficient information to derive much information from them. Hence we will be removing them from the analysis:
+
+```{r}
+target <- ecommerce %>% group_by(Description) %>% summarise(Transactions = n()) %>% arrange(desc(Transactions)) %>% filter(Transactions > 9) %>% select(Description)
+
+ecommerce <- ecommerce %>% filter(Description %in% as.vector(t(target)))
+dim(ecommerce)
+
+```
+
+
+* * *
+### c. Country:
+This online retail not only serve UK but also other countries as shown below ( showing for top 5 countries ):
+
+```{r}
+ecommerce %>% group_by(Country) %>% summarise(Transactions = n()) %>% arrange(desc(Transactions)) %>% top_n(5) %>% ggplot(aes(x=Country, y=Transactions)) + geom_bar(stat='identity')
+
+ecommerce <- ecommerce %>% filter(Country == "United Kingdom")
+dim(ecommerce)
+```
+
+We can clearly see that other than UK, the other countries are negligible, hence to keep things simple, we will only look at UK data. 
+
+
+* * *
+### d. Quantity:
+The quantity in this data set is referring to the number of quantity sold per transaction, however there are some strange value as shown below:
+
+```{r}
+ecommerce %>% filter(Quantity < 0) %>% select(Description, Quantity)
+```
+
+After further investigation, the observations with negative are related to product breakage. However to keep things simple, we will be ignoring breakage and only focus on actual sale.
+
+```{r}
+ecommerce <- ecommerce %>% filter(Quantity >= 0)
+dim(ecommerce)
+```
+
+
+* * *
+### e. UnitPrice:
+UnitPrice like its name suggests refers to the price of the product. We will have to check whether there are zero or negative priced product and we will have to remove them too.
+```{r}
+ecommerce %>% filter(UnitPrice <= 0) %>% select(Description, UnitPrice)
+```
+```{r}
+ecommerce <- ecommerce %>% filter(UnitPrice > 0)
+dim(ecommerce)
+```
+
+This is the end of the data cleaning portion, lets move over to the next section where we form relationships between data.
+
+
+* * *
+### f. Maximum and Minimum Unit Price:
+
+The team will be using the maximum and minimum unit price as one of the constraints. 
+
+The maximum unit price will be assumed to be the original price while anything lesser than the maximum unit price will be regarded as discounted already. 
+
+The minimum unit price will be assumed to be the cheapest price in which the retail online store is able to offer since the data did not provide us the cost of each item. Below shows the maximum price and minimum price of all the products:
+
+```{r,warning=FALSE,message=FALSE}
+
+Productmaxmin <- ecommerce %>% group_by(Description) %>% summarise(Transactions = n(), maxUP = max(UnitPrice), minUP = min(UnitPrice)) %>% arrange(desc(Transactions))
+
+Productmaxmin
+```
+
+For product that has the same minimum and maximum price, we will be removing them as their "optimized" prices will only be that one price since the price never change despite any day or quantity change. We found 563 of such product and we will be removing them from the main data set. 
+
+```{r,warning=FALSE,message=FALSE}
+target <- Productmaxmin %>% filter(maxUP == minUP) %>% select(Description)
+target
+
+ecommerce <- ecommerce %>% filter(Description %nin% as.vector(t(target)))
+Productmaxmin <- Productmaxmin %>% filter(Description %nin% as.vector(t(target)))
+
+dim(ecommerce)
+```
+
+
+* * *
+### g. Date:
+The InvoiceDate is difficult to process as it is "dd/mm/yyyy hh:mm". It is easier to handle if we split them up into 3 columns namely: day, month, year, we also rearrange the datetime format to dd/mm/yy.
+
+```{r,warning=FALSE,message=FALSE}
+dates <- as.POSIXct(ecommerce$InvoiceDate, format = "%m/%d/%Y %H:%M")
+df_dates <- data.frame(dates = format(dates, format = "%d/%m/%Y"), Year= format(dates, format = "%Y"), Month= format(dates, format = "%m"), Day= format(dates, format = "%d"))
+
+temp <- cbind(ecommerce, df_dates)
+ecommerce <- temp %>% select(-InvoiceDate)
+
+```
+
+
+Different month will have different amount of transaction and quantity sold, this is because the online retail shop is selling holiday gifts which make sense to have more sale during the holidays.
+
+```{r,warning=FALSE,message=FALSE}
+DispTrans <- ecommerce %>% group_by(Month) %>% summarise(Transactions = n())
+DispQty <- ecommerce %>% group_by(Month) %>% summarise(Quantity = sum(Quantity))
+
+plot1 <- ggplot(DispTrans, aes(x=Month, y=Transactions)) + ggtitle("Transactions over different months") + geom_bar(stat='identity')
+plot2 <- ggplot(DispQty, aes(x=Month, y=Quantity)) + ggtitle("Quantity over different months") + geom_bar(stat='identity')
+
+grid.arrange(plot1, plot2, ncol = 2)
+```
+
+
+## Unit Price and Quantity Sold Relationship:
+
+The price of the item and the quantity sold is related. Lets explore how much each item is sold for each of their unit Price. And seems like the price and total quantity relationship is not completely linear.
+
+```{r,warning=FALSE,message=FALSE}
+ecommerce %>% group_by(Description, UnitPrice) %>% summarise(Total_Qty = sum(Quantity))
+```
+
+Lets also explore the average number of unit sold per transaction for per price, this makes alot more sense as some prices appear more often than others. And usually when the item is cheaper, people will buy more per transaction.
+
+```{r,warning=FALSE,message=FALSE}
+UPvsMeanQty <- ecommerce %>% group_by(Description, UnitPrice) %>% summarise(Mean_Qty = mean(Quantity), Median_Qty = median(Quantity), freq = n())
+ 
+UPvsMeanQty
+```
+
+In real life situation, there might be some extreme data or skewness in the distribution, we will be using median because it is more robust to such cases. Below we will be showing a linear regression plot for some examples:
+
+
+```{r,warning=FALSE,message=FALSE}
+Display1 <- UPvsMeanQty %>% filter(Description == "3 WHITE CHOC MORRIS BOXED CANDLES")
+Display2 <- UPvsMeanQty %>% filter(Description == "CAMPHOR WOOD PORTOBELLO MUSHROOM")
+Display3 <- UPvsMeanQty %>% filter(Description == "3 HOOK PHOTO SHELF ANTIQUE WHITE")
+
+plot1 <- ggplot(Display1, aes(x=UnitPrice, y=Mean_Qty)) + ggtitle(Display1$Description) + geom_point()+ geom_smooth(method=lm, se=FALSE) + ylim(min(Display1$Mean_Qty),max(Display1$Mean_Qty))
+
+plot2 <- ggplot(Display2, aes(x=UnitPrice, y=Mean_Qty)) + ggtitle(Display2$Description) + geom_point()+ geom_smooth(method=lm, se=FALSE) + ylim(min(Display2$Mean_Qty),max(Display2$Mean_Qty))
+
+plot3 <- ggplot(Display3, aes(x=UnitPrice, y=Mean_Qty)) + ggtitle(Display3$Description) + geom_point()+ geom_smooth(method=lm, se=FALSE) + ylim(min(Display3$Mean_Qty),max(Display3$Mean_Qty))
+
+grid.arrange(plot1, plot2, plot3, ncol = 3)
+```
+
+## Price Elasticity Demand:
+
+Seems like not all the products are suitable for linear fitting, we will use local polynomials fitting to fit the data as shown below and predict 10 prices from the min to the max price.
+
+```{r,warning=FALSE,message=FALSE}
+library(KernSmooth)
+
+x<- Display1$UnitPrice
+y<- Display1$Mean_Qty
+plot(x,y,xlab="Price", ylab="Demand", main="3 WHITE CHOC MORRIS BOXED CANDLES")
+bw = (max(x) - min(x)) / 3
+fit <- locpoly(x, y,  bandwidth = bw, gridsize = 10)
+lines(fit, pch=4, col = "blue",type="o",cex=1.5)
+
+x<- Display2$UnitPrice
+y<- Display2$Mean_Qty
+plot(x,y,xlab="Price", ylab="Demand", main="CAMPHOR WOOD PORTOBELLO MUSHROOM")
+bw = (max(x) - min(x)) / 3
+fit <- locpoly(x, y,  bandwidth = bw, gridsize = 10)
+lines(fit, pch=4, col = "blue",type="o",cex=1.5)
+
+x<- Display3$UnitPrice
+y<- Display3$Mean_Qty
+plot(x,y,xlab="Price", ylab="Demand", main="3 HOOK PHOTO SHELF ANTIQUE WHITE")
+bw = (max(x) - min(x)) / 3
+fit <- locpoly(x, y,  bandwidth = bw, gridsize = 10)
+lines(fit, pch=4, col = "blue",type="o",cex=1.5)
+```
+
+This looks like a reasonable model to use to predict the amount of demand at each unit price, we will be doing this for the other products as well. Any prices that is lesser than the max unit price will be regarded as the "discounted" price and the max price will be the "Original" price
+```{r,warning=FALSE,message=FALSE}
+target <- UPvsMeanQty %>% select(Description, UnitPrice, freq) %>% group_by(Description) %>% summarise(maxfreq = max(freq))
+target <- merge(target, UPvsMeanQty)
+ProductList <- target %>% filter(maxfreq == freq) %>% select(Description, UnitPrice)
+ProductList <- ProductList %>% group_by(Description) %>% summarise(n())
+
+#Final Sanity Check to remove non sales item row
+ProductList <- ProductList[!(ProductList$Description=="Bank Charges" | ProductList$Description=="Manual" | ProductList$Description=="Next Day Carriage" | ProductList$Description=="POSTAGE" | ProductList$Description=="DOTCOM POSTAGE"),]
+```
+
+```{r,warning=FALSE,message=FALSE}
+Products <- ProductList$Description
+Description <- NULL
+fit <- NULL
+fitx <- NULL
+fity <- NULL
+df1 <- NULL
+df2 <- NULL
+idx <- 1
+
+for (Product in Products) {
+  temp <- UPvsMeanQty %>% filter(Description == Product)
+  x<- temp$UnitPrice
+  y<- temp$Mean_Qty
+  bw = (max(x) - min(x)) / 3
+  Description[idx] <- Product
+  fit <- locpoly(x, y,  bandwidth = bw, gridsize = 10)
+  fitx <- fit[["x"]]
+  fity <- fit[["y"]]
+  df1 <- data.frame(idx,Product,fitx,fity)
+  df2 <- rbind(df2, df1)
+  idx <- idx + 1
+}
+
+```
+
+Finally we will write df2 to a csv which will become our optimizer input file
+
+```{r,warning=FALSE,message=FALSE}
+
+names(df2)[1] = "id"
+names(df2)[2] = "product"
+names(df2)[3] = "price"
+names(df2)[4] = "demand"
+
+df2 %>% summarise(sum(price), mean(price), median(price), sum(price)/10)
+
+#Please uncomment below to create new OptimizerInput.csv File
+#write.csv(df2,"OptimizerInput.csv", row.names = FALSE)
+```
+
+
+*Please Ignore: For Memory Management*
+```{r,warning=FALSE,message=FALSE}
+#rm(list=ls())
+```
