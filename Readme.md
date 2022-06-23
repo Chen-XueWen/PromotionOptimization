@@ -10,6 +10,7 @@ Presentation Video:
 https://www.youtube.com/watch?v=qTBaXGC5xkM
 
 ### Formulation of a promotion optimization problem
+$$
     "\n",
     "\\begin{equation}\n",
     "\\begin{split}\n",
@@ -20,6 +21,7 @@ https://www.youtube.com/watch?v=qTBaXGC5xkM
     "& x_{ij} \\in \\{0,1\\}\n",
     "\\end{split}\n",
     "\\end{equation}\n",
+$$
     "\n",
     "\n",
     "c = User defined constant to limit number of promotion <br>\n",
