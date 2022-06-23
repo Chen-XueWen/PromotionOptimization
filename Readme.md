@@ -13,7 +13,7 @@ https://www.youtube.com/watch?v=qTBaXGC5xkM
 
 $$
 \begin{align}
-\sum_{j=1}^9
+\max~ & \sum_{j=1}^9
 \end{align}
 $$
 
