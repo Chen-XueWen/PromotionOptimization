@@ -20,3 +20,11 @@ s.t. ~& \sum_{j=1}^9x_{ij}\leq 1, ~ i = 1,...,n \\
 & x_{ij} \in \\{0,1\\}
 \end{align}
 $$
+
+
+c = User defined constant to limit number of promotion \n
+n = number of products \n
+j = different prices for each product \n 
+d<sub>ij</sub> = Demand for product i at j price
+x<sub>ij</sub> = Binary Selection, if x<sup>ij</sup> = 1 means select at product i and price j, 0 if otherwise
+p<sub>ij</sub> = j<sup>th</sup> Price for product i
