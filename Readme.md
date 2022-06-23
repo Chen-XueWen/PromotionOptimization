@@ -9,16 +9,24 @@ https://www.kaggle.com/carrie1/ecommerce-data)
 Presentation Video:
 https://www.youtube.com/watch?v=qTBaXGC5xkM
 
-### Linear Programming formulation
-$$
-begin{equation}\n",
-begin{split}\n",
-max~ & \\sum_{j=1}^9\\sum_{i=1}^n p_{ij}x_{ij}d_{ij} + \\sum_{i=1}^n y_{i} \\bar{p}_{i} \\bar{d}_{i} \\\\\n",
-s.t. ~& \\sum_{j=1}^9x_{ij}\\leq 1, ~ i = 1,...,n\\\\\n",
-& \\sum _{j=1}^{9}\\sum _{i=1}^{n} p_{ij} x_{ij} \\leq c\\\\\n",
-& y_{i}= 1-\\sum_{j=1}^9 x_{ij}, ~ i = 1,...,n \\\\\n",
-& x_{ij} \\in \\{0,1\\}\n",
-end{split}\n",
-end{equation}\n",
-"\n",
-$$
+### Formulation of a promotion optimization problem
+    "\n",
+    "\\begin{equation}\n",
+    "\\begin{split}\n",
+    "\\max~ & \\sum_{j=1}^9\\sum_{i=1}^n p_{ij}x_{ij}d_{ij} + \\sum_{i=1}^n y_{i} \\bar{p}_{i} \\bar{d}_{i} \\\\\n",
+    "s.t. ~& \\sum_{j=1}^9x_{ij}\\leq 1, ~ i = 1,...,n\\\\\n",
+    "& \\sum _{j=1}^{9}\\sum _{i=1}^{n} p_{ij} x_{ij} \\leq c\\\\\n",
+    "& y_{i}= 1-\\sum_{j=1}^9 x_{ij}, ~ i = 1,...,n \\\\\n",
+    "& x_{ij} \\in \\{0,1\\}\n",
+    "\\end{split}\n",
+    "\\end{equation}\n",
+    "\n",
+    "\n",
+    "c = User defined constant to limit number of promotion <br>\n",
+    "n = number of products <br>\n",
+    "j = different prices for each product <br>\n",
+    "\n",
+    "d<sub>ij</sub> = Demand for product i at j price <br>\n",
+    "x<sub>ij</sub> = Binary Selection, if x<sup>ij</sup> = 1 means select at product i and price j, 0 if otherwise  <br>\n",
+    "p<sub>ij</sub> = j<sup>th</sup> Price for product i "
+   ]
