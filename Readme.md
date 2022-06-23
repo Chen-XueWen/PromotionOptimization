@@ -29,4 +29,4 @@ d<sub>ij</sub> = Demand for product i at j price  <br>
 x<sub>ij</sub> = Binary Selection, if x<sup>ij</sup> = 1 means select at product i and price j, 0 if otherwise  <br>
 p<sub>ij</sub> = j<sup>th</sup> Price for product i  <br>
 
-Please read the papers for greater detail
+Please read the paper for more details
