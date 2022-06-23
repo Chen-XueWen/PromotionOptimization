@@ -14,12 +14,12 @@ https://www.youtube.com/watch?v=qTBaXGC5xkM
 $$
 \begin{align}
 \max~ & \sum_{j=1}^9\sum_{i=1}^n p_{ij}x_{ij}d_{ij} + \sum_{i=1}^n y_{i} \bar{p}_{i} \bar{d}_{i} \\
+s.t. ~& \sum_{j=1}^9x_{ij}\leq 1, ~ i = 1,...,n \\
+& \sum _{j=1}^{9}\sum _{i=1}^{n} p_{ij} x_{ij} \\
+& y_{i}= 1-\sum_{j=1}^9 x_{ij}, ~ i = 1,...,n \\
+& x_{ij} \in \{0,1\}"
 \end{align}
 $$
-"s.t. ~& \\sum_{j=1}^9x_{ij}\\leq 1, ~ i = 1,...,n\\\\\n",
-"& \\sum _{j=1}^{9}\\sum _{i=1}^{n} p_{ij} x_{ij} \\leq c\\\\\n",
-"& y_{i}= 1-\\sum_{j=1}^9 x_{ij}, ~ i = 1,...,n \\\\\n",
-"& x_{ij} \\in \\{0,1\\}\n",
 
     "\n",
     "\n",
