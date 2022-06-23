@@ -13,7 +13,7 @@ https://www.youtube.com/watch?v=qTBaXGC5xkM
 
 $$
 \begin{align}
-\max~ & \sum_{j=1}^9
+\max~ & \sum_{j=1}^9\sum_{i=1}^n p_{ij}x_{ij}d_{ij} + \sum_{i=1}^n y_{i} \bar{p}_{i} \bar{d}_{i} 
 \end{align}
 $$
 
