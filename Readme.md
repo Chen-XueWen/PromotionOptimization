@@ -17,17 +17,6 @@ $$
 s.t. ~& \sum_{j=1}^9x_{ij}\leq 1, ~ i = 1,...,n \\
 & \sum \_{j=1}^{9}\sum \_{i=1}^{n} p_{ij} x_{ij} \leq c \\
 & y_{i}= 1-\sum_{j=1}^9 x_{ij}, ~ i = 1,...,n \\
-& x_{ij} \in {0,1}
+& x_{ij} \in \{0,1\}
 \end{align}
 $$
-
-    "\n",
-    "\n",
-    "c = User defined constant to limit number of promotion <br>\n",
-    "n = number of products <br>\n",
-    "j = different prices for each product <br>\n",
-    "\n",
-    "d<sub>ij</sub> = Demand for product i at j price <br>\n",
-    "x<sub>ij</sub> = Binary Selection, if x<sup>ij</sup> = 1 means select at product i and price j, 0 if otherwise  <br>\n",
-    "p<sub>ij</sub> = j<sup>th</sup> Price for product i "
-   ]
