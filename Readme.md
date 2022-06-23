@@ -10,6 +10,6 @@ Presentation Video:
 https://www.youtube.com/watch?v=qTBaXGC5xkM
 
 ### Linear Programming formulation
-```math
+$$
 SE = \frac{\sigma}{\sqrt{n}}
-```
+$$
